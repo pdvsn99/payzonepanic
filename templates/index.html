@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Payzone Panic - Shopkeeper Interface</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <div class="overlay">
+      <h1>Payzone Panic</h1>
+      <p>Shopkeeper Interface</p>
+    </div>
+    <a class="logout" href="{{ url_for('logout') }}">Logout</a>
+  </header>
+  <nav class="breadcrumb">
+    <a href="{{ url_for('home') }}">Home</a>
+    <span>&gt;</span>
+    <span>Puzzle</span>
+  </nav>
+  <div class="container">
+    <!-- Box Number Form -->
+    <div class="form-section">
+      <form id="box-form">
+        <label for="box-number">Enter Puzzle Box Number:</label>
+        <input type="text" id="box-number" placeholder="e.g., BOX001" required>
+        <button type="submit">Fetch Puzzle</button>
+      </form>
+    </div>
+    <!-- Puzzle Display and Answer Form -->
+    <div id="puzzle-section" class="form-section" style="display:none;">
+      <label>Puzzle:</label>
+      <p id="puzzle-question"></p>
+      <div id="timer" style="font-size: 1.5em; color: red;">90</div>
+      <form id="answer-form">
+        <label for="answer">Enter Answer:</label>
+        <input type="text" id="answer" placeholder="Enter answer" required>
+        <button type="submit">Submit Answer</button>
+      </form>
+    </div>
+    <!-- Result and Scoreboard -->
+    <div id="result" class="form-section"></div>
+    <div class="form-section">
+      <h2>Scoreboard</h2>
+      <ul id="score-list"></ul>
+    </div>
+  </div>
+  <footer>
+    <div>Payzone Panic © Paul Davidson 2025 | Privacy Policy | Terms of Use.</div>
+    <div class="text-size">
+      <label for="text-size-select">Text Size:</label>
+      <select id="text-size-select" onchange="document.body.style.fontSize = this.value;">
+        <option value="100%">100%</option>
+        <option value="125%">125%</option>
+        <option value="150%">150%</option>
+      </select>
+    </div>
+  </footer>
+  <script>
+    (function(){
+      document.getElementById('box-form').addEventListener('submit', function(e){
+        e.preventDefault();
+        const boxNumber = document.getElementById('box-number').value.trim();
+        if(!boxNumber) return;
+        fetch('/api/puzzle/' + encodeURIComponent(boxNumber))
+        .then(response => response.json())
+        .then(data => {
+          if(data.error) {
+            alert(data.error);
+          } else {
+            document.getElementById('puzzle-question').textContent = data.question;
+            document.getElementById('puzzle-section').style.display = 'block';
+            startTimer(data.duration);
+            document.getElementById('answer-form').dataset.boxNumber = data.box_number;
+          }
+        })
+        .catch(err => {
+          alert('Error fetching puzzle.');
+        });
+      });
+
+      let timerInterval;
+      function startTimer(duration) {
+        clearInterval(timerInterval);
+        let timeLeft = duration;
+        document.getElementById('timer').textContent = timeLeft;
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          document.getElementById('timer').textContent = timeLeft;
+          if(timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert('Time is up!');
+            document.getElementById('puzzle-section').style.display = 'none';
+          }
+        }, 1000);
+      }
+
+      function storeOfflineSubmission(submission) {
+        let submissions = JSON.parse(localStorage.getItem('offlineSubmissions') || '[]');
+        submissions.push(submission);
+        localStorage.setItem('offlineSubmissions', JSON.stringify(submissions));
+      }
+
+      function syncOfflineSubmissions() {
+        let submissions = JSON.parse(localStorage.getItem('offlineSubmissions') || '[]');
+        if(submissions.length === 0) return;
+        fetch('/api/sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(submissions)
+        }).then(response => response.json())
+          .then(data => {
+              localStorage.removeItem('offlineSubmissions');
+          }).catch(err => {
+              console.log('Sync failed; will try again later.');
+          });
+      }
+
+      setInterval(syncOfflineSubmissions, 30000);
+
+      document.getElementById('answer-form').addEventListener('submit', function(e){
+        e.preventDefault();
+        const answer = document.getElementById('answer').value.trim();
+        const boxNumber = e.target.dataset.boxNumber;
+        if(!answer || !boxNumber) return;
+        const submission = { box_number: boxNumber, answer: answer };
+
+        fetch('/api/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(submission)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.error) {
+            alert('Submission error: ' + data.error + '. Storing submission offline.');
+            storeOfflineSubmission(submission);
+          } else {
+            document.getElementById('result').textContent =
+              data.result ? 'Correct Answer!' : 'Incorrect Answer. Puzzle forfeited.';
+            document.getElementById('puzzle-section').style.display = 'none';
+            fetchScoreboard();
+          }
+        })
+        .catch(err => {
+          alert('Network error, storing submission offline.');
+          storeOfflineSubmission(submission);
+          document.getElementById('puzzle-section').style.display = 'none';
+        });
+      });
+
+      function fetchScoreboard() {
+        fetch('/api/scoreboard')
+        .then(response => response.json())
+        .then(data => {
+          const scoreList = document.getElementById('score-list');
+          scoreList.innerHTML = '';
+          data.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item.team_name + ': ' + item.score;
+            scoreList.appendChild(li);
+          });
+        })
+        .catch(err => {
+          console.log('Error fetching scoreboard.');
+        });
+      }
+      setInterval(fetchScoreboard, 10000);
+      fetchScoreboard();
+    })();
+  </script>
+</body>
+</html>

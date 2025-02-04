@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Payzone Panic - Team Settings (Admin)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+      function updateTeam(oldTeam) {
+          let newTeam = prompt("Enter new name for team '" + oldTeam + "':", oldTeam);
+          if(newTeam && newTeam.trim() !== "" && newTeam !== oldTeam) {
+              // Create a form dynamically and submit
+              let form = document.createElement("form");
+              form.method = "POST";
+              form.action = "{{ url_for('update_team_settings') }}";
+              let oldInput = document.createElement("input");
+              oldInput.type = "hidden";
+              oldInput.name = "old_team_name";
+              oldInput.value = oldTeam;
+              form.appendChild(oldInput);
+              let newInput = document.createElement("input");
+              newInput.type = "hidden";
+              newInput.name = "team_name";
+              newInput.value = newTeam;
+              form.appendChild(newInput);
+              document.body.appendChild(form);
+              form.submit();
+          }
+      }
+    </script>
+</head>
+<body>
+    <header>
+        <div class="overlay">
+            <h1>Team Settings (Admin)</h1>
+            <p>Manage team names</p>
+        </div>
+        <a class="logout" href="{{ url_for('logout') }}">Logout</a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="{{ url_for('home') }}">Home</a>
+        <span>&gt;</span>
+        <span>Team Settings</span>
+    </nav>
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flash-messages">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+        <h2>Existing Teams</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Team Name</th>
+                    <th>Score</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for team in teams %}
+                <tr>
+                    <td>{{ team.team_name }}</td>
+                    <td>{{ team.score }}</td>
+                    <td><button onclick="updateTeam('{{ team.team_name }}')">Edit</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <footer>
+        <div>Payzone Panic © Paul Davidson 2025 | Privacy Policy | Terms of Use.</div>
+        <div class="text-size">
+            <label for="text-size-select">Text Size:</label>
+            <select id="text-size-select" onchange="document.body.style.fontSize = this.value;">
+                <option value="100%">100%</option>
+                <option value="125%">125%</option>
+                <option value="150%">150%</option>
+            </select>
+        </div>
+    </footer>
+</body>
+</html>

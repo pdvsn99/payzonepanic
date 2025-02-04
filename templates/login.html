@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Payzone Panic - Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="overlay">
+            <h1>Payzone Panic</h1>
+            <p>Shopkeeper Login</p>
+        </div>
+    </header>
+    <div class="container">
+        <h2>Login</h2>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% endwith %}
+        <form action="{{ url_for('login') }}" method="post">
+            <div class="form-section">
+                <label>Username:</label>
+                <input type="text" name="username" required>
+            </div>
+            <div class="form-section">
+                <label>Password:</label>
+                <input type="password" name="password" required>
+            </div>
+            <div class="form-section">
+                <button type="submit">Login</button>
+            </div>
+        </form>
+    </div>
+    <footer>
+        <div>Payzone Panic © Paul Davidson 2025 | Privacy Policy | Terms of Use.</div>
+        <div class="text-size">
+            <label for="text-size-select">Text Size:</label>
+            <select id="text-size-select" onchange="document.body.style.fontSize = this.value;">
+                <option value="100%">100%</option>
+                <option value="125%">125%</option>
+                <option value="150%">150%</option>
+            </select>
+        </div>
+    </footer>
+</body>
+</html>

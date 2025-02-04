@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Payzone Panic - Team Settings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="overlay">
+            <h1>Team Settings</h1>
+            <p>Update your team name</p>
+        </div>
+        <a class="logout" href="{{ url_for('logout') }}">Logout</a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="{{ url_for('home') }}">Home</a>
+        <span>&gt;</span>
+        <span>Team Settings</span>
+    </nav>
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flash-messages">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+        <form action="{{ url_for('update_team_settings') }}" method="post">
+            <label for="team_name">Your Team Name:</label>
+            <input type="text" id="team_name" name="team_name" value="{{ current_team }}" required>
+            <button type="submit">Update</button>
+        </form>
+    </div>
+    <footer>
+        <div>Payzone Panic © Paul Davidson 2025 | Privacy Policy | Terms of Use.</div>
+        <div class="text-size">
+            <label for="text-size-select">Text Size:</label>
+            <select id="text-size-select" onchange="document.body.style.fontSize = this.value;">
+                <option value="100%">100%</option>
+                <option value="125%">125%</option>
+                <option value="150%">150%</option>
+            </select>
+        </div>
+    </footer>
+</body>
+</html>

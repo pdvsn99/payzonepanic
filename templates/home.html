@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Payzone Panic - Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="overlay">
+            <h1>Payzone Panic</h1>
+            <p>Welcome, {{ session.username }}</p>
+        </div>
+        <a class="logout" href="{{ url_for('logout') }}">Logout</a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="{{ url_for('home') }}">Home</a>
+    </nav>
+    <div class="container">
+        <h2>Navigation</h2>
+        <ul>
+            {% if session.username != 'admin' %}
+            <li><a href="{{ url_for('index') }}">Puzzle Interface</a></li>
+            <li><a href="{{ url_for('team_settings') }}">Team Settings</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('display') }}">Display Scoreboard</a></li>
+            {% if session.username == 'admin' %}
+            <li><a href="{{ url_for('admin') }}">Admin Dashboard</a></li>
+            <li><a href="{{ url_for('team_settings') }}">Team Settings (Admin)</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    <footer>
+        <div>Payzone Panic © Paul Davidson 2025 | Privacy Policy | Terms of Use.</div>
+        <div class="text-size">
+            <label for="text-size-select">Text Size:</label>
+            <select id="text-size-select" onchange="document.body.style.fontSize = this.value;">
+                <option value="100%">100%</option>
+                <option value="125%">125%</option>
+                <option value="150%">150%</option>
+            </select>
+        </div>
+    </footer>
+</body>
+</html>

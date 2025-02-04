@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Payzone Panic - Scoreboard Display</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+      /* Additional styling for display page */
+      .scoreboard-container {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 20px;
+          padding: 20px;
+      }
+      .team-card {
+          background: #fff;
+          border-radius: 8px;
+          padding: 20px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+          text-align: center;
+          width: 200px;
+      }
+      .team-card h2 {
+          margin: 0;
+          font-size: 1.5em;
+          color: #333;
+      }
+      .team-card p {
+          font-size: 3em;
+          margin: 10px 0 0 0;
+          color: #000;
+      }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="overlay">
+            <h1>Scoreboard</h1>
+        </div>
+    </header>
+    <div class="scoreboard-container" id="scoreboard-container">
+        <!-- Team cards will be inserted here -->
+    </div>
+    <div id="popup" class="popup"></div>
+    <footer>
+        <div>Payzone Panic © Paul Davidson 2025 | Privacy Policy | Terms of Use.</div>
+        <div class="text-size">
+            <label for="text-size-select">Text Size:</label>
+            <select id="text-size-select" onchange="document.body.style.fontSize = this.value;">
+                <option value="100%">100%</option>
+                <option value="125%">125%</option>
+                <option value="150%">150%</option>
+            </select>
+        </div>
+    </footer>
+    <script>
+      let previousScores = {};
+      function fetchScores() {
+          fetch('/api/public/scoreboard')
+          .then(response => response.json())
+          .then(data => {
+              let container = document.getElementById('scoreboard-container');
+              container.innerHTML = '';
+              data.sort((a, b) => b.score - a.score);
+              data.forEach(team => {
+                  let card = document.createElement('div');
+                  card.className = 'team-card';
+                  let teamName = document.createElement('h2');
+                  teamName.textContent = team.team_name;
+                  let score = document.createElement('p');
+                  score.textContent = team.score;
+                  card.appendChild(teamName);
+                  card.appendChild(score);
+                  container.appendChild(card);
+                  // Check for score increase to trigger popup
+                  if(previousScores[team.team_name] !== undefined && team.score > previousScores[team.team_name]) {
+                      showPopup(team.team_name + ' scored!');
+                  }
+                  previousScores[team.team_name] = team.score;
+              });
+          })
+          .catch(err => {
+              console.error('Error fetching scores', err);
+          });
+      }
+
+      function showPopup(message) {
+          let popup = document.getElementById('popup');
+          popup.textContent = message;
+          popup.style.display = 'block';
+          setTimeout(() => { popup.style.display = 'none'; }, 3000);
+      }
+
+      setInterval(fetchScores, 5000);
+      fetchScores();
+    </script>
+</body>
+</html>

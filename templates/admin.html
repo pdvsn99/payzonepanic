@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Payzone Panic - Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    function fetchPuzzles() {
+      fetch('/admin/puzzle_list')
+        .then(response => response.json())
+        .then(data => {
+          let tableBody = document.getElementById('puzzles-table-body');
+          tableBody.innerHTML = '';
+          data.forEach(puzzle => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${puzzle.box_number}</td>
+              <td>${puzzle.question}</td>
+              <td>${puzzle.answer}</td>
+              <td>${puzzle.solved ? 'Yes' : 'No'}</td>
+              <td>
+                <button onclick="deletePuzzle('${puzzle.box_number}')">Delete</button>
+                <button onclick="editPuzzlePrompt('${puzzle.box_number}', '${puzzle.question}', '${puzzle.answer}')">Edit</button>
+              </td>
+            `;
+            tableBody.appendChild(tr);
+          });
+        });
+    }
+
+    function deletePuzzle(box_number) {
+      if(confirm("Are you sure you want to delete puzzle " + box_number + "?")) {
+        fetch('/admin/delete-puzzle', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ box_number: box_number })
+        })
+        .then(response => response.json())
+        .then(data => {
+          alert(data.message);
+          fetchPuzzles();
+        });
+      }
+    }
+
+    function editPuzzlePrompt(box_number, question, answer) {
+      let newQuestion = prompt("Edit question:", question);
+      let newAnswer = prompt("Edit answer:", answer);
+      if(newQuestion && newAnswer) {
+        fetch('/admin/edit-puzzle', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ box_number: box_number, question: newQuestion, answer: newAnswer })
+        })
+        .then(response => response.json())
+        .then(data => {
+          alert(data.message);
+          fetchPuzzles();
+        });
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function(){
+      fetchPuzzles();
+    });
+  </script>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="overlay">
+      <h1>Admin Dashboard</h1>
+      <p>Manage Game and Puzzles</p>
+    </div>
+    <a class="logout" href="{{ url_for('logout') }}">Logout</a>
+  </header>
+  <nav class="breadcrumb">
+    <a href="{{ url_for('home') }}">Home</a>
+    <span>&gt;</span>
+    <span>Admin</span>
+  </nav>
+  <div class="container">
+    <div class="form-section">
+      <button id="reset-game">Reset Game</button>
+    </div>
+    <div class="form-section">
+      <h2>Add Puzzle</h2>
+      <form id="add-puzzle-form">
+        <label for="box-number">Box Number:</label>
+        <input type="text" id="box-number" required>
+        <label for="question">Question:</label>
+        <input type="text" id="question" required>
+        <label for="answer">Answer:</label>
+        <input type="text" id="answer" required>
+        <button type="submit">Add Puzzle</button>
+      </form>
+    </div>
+    <div class="form-section">
+      <h2>Manage Puzzles</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Box Number</th>
+            <th>Question</th>
+            <th>Answer</th>
+            <th>Solved</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="puzzles-table-body">
+          <!-- Dynamically filled -->
+        </tbody>
+      </table>
+    </div>
+    <div class="form-section">
+      <button id="download-logs">Download Logs</button>
+    </div>
+  </div>
+  <footer>
+    <div>Payzone Panic © Paul Davidson 2025 | Privacy Policy | Terms of Use.</div>
+    <div class="text-size">
+      <label for="text-size-select">Text Size:</label>
+      <select id="text-size-select" onchange="document.body.style.fontSize = this.value;">
+        <option value="100%">100%</option>
+        <option value="125%">125%</option>
+        <option value="150%">150%</option>
+      </select>
+    </div>
+  </footer>
+  <script>
+    (function(){
+      document.getElementById('reset-game').addEventListener('click', function(){
+        if(confirm("Are you sure you want to reset the game?")) {
+          fetch('/admin/reset', { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            alert(data.message);
+            fetchPuzzles();
+          })
+          .catch(err => {
+            alert('Error resetting game.');
+          });
+        }
+      });
+
+      document.getElementById('add-puzzle-form').addEventListener('submit', function(e){
+        e.preventDefault();
+        const boxNumber = document.getElementById('box-number').value.trim();
+        const question = document.getElementById('question').value.trim();
+        const answer = document.getElementById('answer').value.trim();
+        fetch('/admin/add-puzzle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ box_number: boxNumber, question: question, answer: answer })
+        })
+        .then(response => response.json())
+        .then(data => {
+          alert(data.message || data.error);
+          fetchPuzzles();
+        })
+        .catch(err => {
+          alert('Error adding puzzle.');
+        });
+      });
+
+      document.getElementById('download-logs').addEventListener('click', function(){
+        window.location.href = '/admin/logs';
+      });
+    })();
+  </script>
+</body>
+</html>
