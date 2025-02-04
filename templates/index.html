@@ -71,10 +71,12 @@
           } else {
             document.getElementById('puzzle-question').textContent = data.question;
             document.getElementById('puzzle-section').style.display = 'block';
+            document.getElementById('answer').value = ''; // Clears the answer input field
             startTimer(data.duration);
             document.getElementById('answer-form').dataset.boxNumber = data.box_number;
           }
         })
+
         .catch(err => {
           alert('Error fetching puzzle.');
         });
