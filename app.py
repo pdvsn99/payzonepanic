@@ -464,4 +464,4 @@ if __name__ == '__main__':
             add_sample_data()
     # Run the application on all available interfaces on port 5000.
     # (On a Raspberry Pi, you can access the app via http://<your_pi_ip>:5000/)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)
